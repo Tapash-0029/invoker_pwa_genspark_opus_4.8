@@ -14,7 +14,8 @@ export function renderApp(): string {
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.1/css/all.min.css" rel="stylesheet" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&family=Cinzel:wght@600;700;800;900&display=swap" rel="stylesheet" />
   <link href="/static/style.css" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js" defer></script>
@@ -22,7 +23,7 @@ export function renderApp(): string {
 </head>
 <body data-theme="dark">
   <div id="splash" class="splash">
-    <div class="splash-logo"><i class="fa-solid fa-file-invoice"></i></div>
+    <div class="splash-logo"></div>
     <div class="splash-name">INVOKER</div>
     <div class="splash-bar"><span></span></div>
   </div>

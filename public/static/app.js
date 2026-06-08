@@ -199,48 +199,124 @@ function closeModal() { $('#modal-host').innerHTML = '' }
    ============================================================ */
 function renderAuth(mode = 'login') {
   const root = $('#app-root')
+  const isLogin = mode === 'login'
+  // floating magical motes
+  const motes = Array.from({ length: 14 }).map(() => {
+    const x = Math.random() * 100, dur = 9 + Math.random() * 12, delay = Math.random() * 12
+    const col = ['#00d2ff', '#f5a623', '#8b5cf6'][Math.floor(Math.random() * 3)]
+    return `<i style="left:${x}%;bottom:-10px;animation-duration:${dur}s;animation-delay:${delay}s;background:${col};box-shadow:0 0 8px ${col}"></i>`
+  }).join('')
+
+  const fields = isLogin ? `
+      <div class="arc-field">
+        <label>Username or Email</label>
+        <div class="arc-input">
+          <span class="ico"><i class="fa-solid fa-user"></i></span>
+          <input type="email" name="email" placeholder="name@company.com" autocomplete="username" required>
+          <span class="trail"><span class="avatar"><i class="fa-solid fa-user-astronaut"></i></span></span>
+        </div>
+      </div>
+      <div class="arc-field">
+        <label>Password</label>
+        <div class="arc-input">
+          <span class="ico"><i class="fa-solid fa-lock"></i></span>
+          <input type="password" name="password" id="pw" placeholder="••••••••" autocomplete="current-password" required>
+          <span class="trail"><i class="fa-solid fa-eye-slash eye" id="pw-eye"></i></span>
+        </div>
+      </div>
+      <div class="arc-row">
+        <div class="arc-check" id="remember"><span class="arc-box on" id="rem-box"><i class="fa-solid fa-check"></i></span> Remember me</div>
+        <a class="arc-link" id="forgot">Forgot your password?</a>
+      </div>` : `
+      <div class="arc-field">
+        <label>Full Name</label>
+        <div class="arc-input">
+          <span class="ico"><i class="fa-solid fa-user"></i></span>
+          <input type="text" name="name" placeholder="e.g. John Doe" required>
+        </div>
+      </div>
+      <div class="arc-field">
+        <label>Email</label>
+        <div class="arc-input">
+          <span class="ico"><i class="fa-solid fa-envelope"></i></span>
+          <input type="email" name="email" placeholder="name@company.com" autocomplete="email" required>
+          <span class="trail"><span class="avatar"><i class="fa-solid fa-user-astronaut"></i></span></span>
+        </div>
+      </div>
+      <div class="arc-field">
+        <label>Password</label>
+        <div class="arc-input">
+          <span class="ico"><i class="fa-solid fa-lock"></i></span>
+          <input type="password" name="password" id="pw" placeholder="••••••••" autocomplete="new-password" required>
+          <span class="trail"><i class="fa-solid fa-eye-slash eye" id="pw-eye"></i></span>
+        </div>
+      </div>
+      <div class="arc-field">
+        <label>Company/Hospital Name</label>
+        <div class="arc-input">
+          <span class="ico"><i class="fa-solid fa-hospital"></i></span>
+          <input type="text" name="company_name" placeholder="e.g. General Hospital">
+        </div>
+      </div>`
+
   root.innerHTML = `
   <div class="auth-wrap">
-    <div class="auth-card card">
-      <div class="auth-logo"><i class="fa-solid fa-file-invoice"></i></div>
-      <h1 style="text-align:center;font-family:var(--font-head);margin:0 0 4px">Invoker</h1>
-      <p style="text-align:center;color:var(--text-dim);font-size:13px;margin:0 0 18px">Enterprise document suite</p>
-      <div class="auth-tabs">
-        <div class="auth-tab ${mode === 'login' ? 'active' : ''}" data-m="login">Sign In</div>
-        <div class="auth-tab ${mode === 'register' ? 'active' : ''}" data-m="register">Register</div>
-      </div>
-      <form id="auth-form">
-        ${mode === 'register' ? `
-          <div class="field"><label>Full Name</label><input class="input" name="name" placeholder="Dr. Jane Doe" required></div>` : ''}
-        <div class="field"><label>Email</label><input class="input" type="email" name="email" placeholder="you@hospital.com" required></div>
-        <div class="field"><label>Password</label><input class="input" type="password" name="password" placeholder="••••••••" required></div>
-        ${mode === 'register' ? `
-          <div class="field"><label>Company / Hospital Name</label><input class="input" name="company_name" placeholder="City General Hospital"></div>` : ''}
-        <button class="btn primary block" type="submit" id="auth-submit">
-          <span class="label">${mode === 'login' ? 'Sign In' : 'Create Account'}</span>
+    <div class="auth-motes">${motes}</div>
+    <section class="auth-card">
+      <div class="arc-frame">
+        <span class="arc-corner tl"></span><span class="arc-corner tr"></span>
+        <span class="arc-corner bl"></span><span class="arc-corner br"></span>
+        <span class="arc-rune l"></span><span class="arc-rune r"></span>
+        <div class="arc-crest"></div>
+        <h1 class="arc-title">INVOKER</h1>
+        <div class="arc-sub">PLATFORM ACCESS</div>
+        <div class="arc-tabs">
+          <button class="arc-tab ${isLogin ? 'active' : ''}" data-m="login"><i class="fa-solid fa-user"></i> SIGN IN</button>
+          <button class="arc-tab ${!isLogin ? 'active' : ''}" data-m="register"><i class="fa-solid fa-user-plus"></i> REGISTER</button>
+        </div>
+        <form id="auth-form" class="arc-fields">${fields}</form>
+        <div class="arc-gem"><i class="fa-solid fa-compass"></i></div>
+        <button class="arc-cta" id="auth-submit" type="button">
+          <span class="label"><i class="fa-solid fa-${isLogin ? 'right-to-bracket' : 'wand-magic-sparkles'}"></i> ${isLogin ? 'ACCESS YOUR DASHBOARD' : 'CREATE YOUR ACCOUNT'}</span>
           <span class="spinner"></span>
         </button>
-      </form>
-      <p style="text-align:center;color:var(--text-faint);font-size:11.5px;margin-top:16px">
-        Demo: <b>admin@invoker.dev</b> / <b>password123</b>
-      </p>
-    </div>
+        <div class="arc-cta-flare"></div>
+        <div class="arc-demo">Demo: <b>admin@invoker.dev</b> / <b>password123</b></div>
+      </div>
+    </section>
+    <i class="fa-solid fa-sparkles arc-spark"></i>
   </div>`
-  bindRipples(root)
-  root.querySelectorAll('.auth-tab').forEach((t) => t.addEventListener('click', () => renderAuth(t.dataset.m)))
-  $('#auth-form').addEventListener('submit', async (e) => {
-    e.preventDefault()
-    const f = new FormData(e.target)
+
+  // tab switching
+  root.querySelectorAll('.arc-tab').forEach((t) => t.addEventListener('click', () => { if (t.dataset.m !== mode) renderAuth(t.dataset.m) }))
+  // password eye
+  const eye = $('#pw-eye')
+  eye?.addEventListener('click', () => {
+    const pw = $('#pw'); const show = pw.type === 'password'
+    pw.type = show ? 'text' : 'password'
+    eye.className = 'fa-solid eye ' + (show ? 'fa-eye' : 'fa-eye-slash')
+  })
+  // remember me
+  let remember = true
+  $('#remember')?.addEventListener('click', () => { remember = !remember; $('#rem-box').classList.toggle('on', remember) })
+  $('#forgot')?.addEventListener('click', () => toast('Contact your administrator to reset your password', 'info', 'fa-key'))
+
+  const submit = async () => {
+    const f = new FormData($('#auth-form'))
+    const data = Object.fromEntries(f)
+    if (!data.email || !data.password || (!isLogin && !data.name)) { toast('Please fill all required fields', 'bad'); return }
     const btn = $('#auth-submit'); btn.classList.add('morph')
     try {
-      const path = mode === 'login' ? '/auth/login' : '/auth/register'
-      const d = await api(path, { method: 'POST', auth: false, body: Object.fromEntries(f) })
+      const path = isLogin ? '/auth/login' : '/auth/register'
+      const d = await api(path, { method: 'POST', auth: false, body: data })
       onAuth(d)
     } catch (err) {
       btn.classList.remove('morph')
       toast(err.message || 'Authentication failed', 'bad')
     }
-  })
+  }
+  $('#auth-submit').addEventListener('click', submit)
+  $('#auth-form').addEventListener('submit', (e) => { e.preventDefault(); submit() })
 }
 
 function onAuth(d) {
@@ -274,7 +350,7 @@ function bootApp() {
     <nav class="bottom-nav">
       ${navItem('dashboard', 'fa-chart-line', 'Dashboard')}
       ${navItem('invoice', 'fa-file-invoice-dollar', 'Invoice')}
-      <div class="nav-center"><button class="nav-logo" id="menu-btn"><i class="fa-solid fa-layer-group"></i></button></div>
+      <div class="nav-center"><button class="nav-logo" id="menu-btn" aria-label="Open menu"></button></div>
       ${navItem('certificate', 'fa-award', 'Certificate')}
       ${navItem('report', 'fa-chart-pie', 'Reports')}
     </nav>`
