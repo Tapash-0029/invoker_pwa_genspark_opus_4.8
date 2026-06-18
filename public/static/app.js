@@ -478,42 +478,173 @@ async function screenDashboard() {
 
   const c = d.counts
   const view = $('#view')
-  view.innerHTML = `<div class="screen">
-    ${topbar('Dashboard', 'Hi, ' + esc(State.user?.name?.split(' ')[0] || 'there') + ' 👋')}
-    <div class="sync-dot ${State.online ? '' : 'off'}" id="sync-ind" style="margin-bottom:14px"><span class="d"></span>${State.online ? 'Live · Real-time sync on' : 'Offline mode'}</div>
-    <div class="grid cols-2">
-      ${statCard('fa-sack-dollar', '#22c55e', money(c.revenue), 'Revenue (paid)')}
-      ${statCard('fa-hourglass-half', '#f59e0b', money(c.due), 'Outstanding due')}
-      ${statCard('fa-file-invoice-dollar', '#6366f1', c.invoices, 'Invoices')}
-      ${statCard('fa-receipt', '#06b6d4', c.txns, 'Transactions')}
-      ${statCard('fa-award', '#8b5cf6', c.certificates, 'Certificates')}
-      ${statCard('fa-chart-pie', '#ef4444', c.reports, 'Reports')}
-    </div>
-    <div class="section-title"><i class="fa-solid fa-chart-area" style="color:var(--accent)"></i> Revenue · last 7 days</div>
-    <div class="card"><canvas id="rev-chart" height="150"></canvas></div>
-    <div class="section-title"><i class="fa-solid fa-clock-rotate-left" style="color:var(--accent)"></i> Recent activity</div>
-    <div id="recent">${(d.recent || []).length ? d.recent.map(recentRow).join('') : emptyBlock('No documents yet')}</div>
-    <button class="btn primary block" id="quick-create" style="margin-top:16px"><i class="fa-solid fa-plus"></i> Create Document</button>
+  const first = esc(State.user?.name?.split(' ')[0] || 'there')
+  const collected = c.collected || 0
+  const due = c.due || 0
+  const totalRev = collected + due
+  const collRate = totalRev > 0 ? Math.round((collected / totalRev) * 100) : 0
+
+  view.innerHTML = `<div class="screen dash">
+    ${dashHeader()}
+    <section class="dash-welcome">
+      <div>
+        <h1 class="dw-title">Welcome back, ${first}!</h1>
+        <p class="dw-sub">Here's what's happening with your business.</p>
+      </div>
+      <button class="period-pill ripple" id="period-pill"><i class="fa-regular fa-calendar"></i> This Month <i class="fa-solid fa-chevron-down" style="font-size:9px;opacity:.7"></i></button>
+    </section>
+
+    <section class="stat-grid">
+      ${statCard('fa-sack-dollar', 'green', money(c.revenue), 'Revenue (paid)', 12.5, 2.5, true)}
+      ${statCard('fa-hourglass-half', 'amber', money(due), 'Outstanding Due', 8.3, 2.5, true)}
+      ${statCard('fa-file-lines', 'blue', c.txns, 'Transactions', 5.7, 2.3, true)}
+      ${statCard('fa-file-invoice', 'violet', c.invoices, 'Invoices', 11.1, -11.1, true)}
+    </section>
+
+    <section class="wide-grid">
+      ${wideCard('fa-award', 'violet', c.certificates, 'Certificates', 15.4, 1.5, 'fa-certificate')}
+      ${wideCard('fa-chart-pie', 'ember', c.reports, 'Reports', 3.2, 2.5, 'fa-chart-simple')}
+    </section>
+
+    <section class="chart-grid">
+      <article class="card panel" id="sales-panel">
+        <header class="panel-head">
+          <h3>Sales Charts</h3>
+          <div class="legend"><span class="lg"><i class="dot" style="background:var(--accent3)"></i>Service sales</span><span class="lg"><i class="dot" style="background:var(--accent2)"></i>Product sales</span></div>
+        </header>
+        <div class="chart-wrap"><canvas id="sales-chart" height="170"></canvas></div>
+      </article>
+      <article class="card panel" id="insights-panel">
+        <header class="panel-head"><h3>Revenue Insights</h3></header>
+        <div class="gauge-wrap">
+          <div class="gauge" id="gauge" style="--p:${collRate}">
+            <div class="gauge-center"><b>${collRate}%</b><small>Collection Rate</small></div>
+          </div>
+        </div>
+        <div class="ins-bars">
+          <div class="ins-row"><span class="ins-lbl"><i class="dot" style="background:var(--ok)"></i>Paid</span><div class="ins-track"><div class="ins-fill" style="--w:${totalRev?Math.round(collected/totalRev*100):0}%;background:var(--ok)"></div></div><b>${money(collected)}</b></div>
+          <div class="ins-row"><span class="ins-lbl"><i class="dot" style="background:var(--accent2)"></i>Unpaid</span><div class="ins-track"><div class="ins-fill" style="--w:${totalRev?Math.round(due/totalRev*100):0}%;background:var(--accent2)"></div></div><b>${money(due)}</b></div>
+        </div>
+        <div class="ins-summary">
+          <div><small>Total Revenue</small><b>${money(totalRev)}</b></div>
+          <div><small>Projected (Q3)</small><b>${money(Math.round(totalRev * 1.28))}</b></div>
+        </div>
+      </article>
+    </section>
+
+    <section class="card panel activities">
+      <header class="panel-head"><h3>Recent Activities</h3><a class="view-all" id="view-all">View all <i class="fa-solid fa-arrow-right"></i></a></header>
+      <div id="recent">${(d.recent || []).length ? d.recent.map(actRow).join('') : emptyBlock('No activity yet')}</div>
+    </section>
   </div>`
-  bindTopbar(); bindRipples(view)
-  $('#quick-create').addEventListener('click', () => loadRoute('create'))
-  view.querySelectorAll('.stat').forEach((s, i) => setTimeout(() => s.classList.add('shimmer'), i * 90))
+
+  bindDashHeader(); bindRipples(view)
+  $('#period-pill')?.addEventListener('click', () => toast('Period filter coming soon', 'info', 'fa-calendar'))
+  $('#view-all')?.addEventListener('click', () => loadRoute('invoice'))
   view.querySelectorAll('[data-doc]').forEach((r) => r.addEventListener('click', () => openDoc(r.dataset.doc)))
+  // staggered reveal + animations
+  view.querySelectorAll('.stat-card,.wide-card,.panel').forEach((el, i) => { el.style.animationDelay = (i * 70) + 'ms'; el.classList.add('reveal') })
   animateCounters(view)
-  drawRevChart(d.series || [])
+  setTimeout(() => view.querySelectorAll('.ins-fill').forEach((f) => f.style.width = f.style.getPropertyValue('--w')), 300)
+  setTimeout(() => { const g = $('#gauge'); if (g) g.classList.add('go') }, 200)
+  drawSparklines(d.series || [])
+  drawSalesChart(d.series || [])
 }
 
-function statCard(icon, color, val, lbl) {
-  return `<div class="card stat hover">
-    <div class="ico" style="background:linear-gradient(135deg,${color},${color}bb)"><i class="fa-solid ${icon}"></i></div>
-    <div class="val" data-count="${typeof val === 'number' ? val : ''}">${val}</div>
-    <div class="lbl">${lbl}</div></div>`
+/* ---- Dashboard ornate header (logo, search, theme, bell, avatar) ---- */
+function dashHeader() {
+  const initials = (State.user?.name || 'U').split(' ').map((s) => s[0]).slice(0, 2).join('').toUpperCase()
+  const dark = State.theme === 'dark'
+  return `<header class="dash-header">
+    <div class="brand">
+      <div class="brand-emblem"></div>
+      <span class="brand-word">INVOKER</span>
+    </div>
+    <div class="search-bar"><i class="fa-solid fa-magnifying-glass"></i><input id="dash-search" placeholder="Search records, clients, invoices..." /></div>
+    <div class="header-actions">
+      <button class="theme-pills ${dark ? 'dark' : 'light'}" id="theme-pills" aria-label="Toggle theme">
+        <span class="tp sun"><i class="fa-solid fa-sun"></i></span>
+        <span class="tp moon"><i class="fa-solid fa-moon"></i></span>
+      </button>
+      <button class="bell-btn ripple" id="bell-btn"><i class="fa-regular fa-bell"></i><span class="bell-badge">3</span></button>
+      <button class="avatar-btn" id="avatar-btn"><span class="av">${initials}</span><span class="online"></span></button>
+    </div>
+  </header>`
+}
+function bindDashHeader() {
+  $('#theme-pills')?.addEventListener('click', () => { toggleTheme(); loadRoute(State.route) })
+  $('#bell-btn')?.addEventListener('click', () => toast('No new notifications', 'info', 'fa-bell'))
+  $('#avatar-btn')?.addEventListener('click', () => loadRoute('settings'))
+  $('#dash-search')?.addEventListener('keydown', (e) => { if (e.key === 'Enter') { loadRoute('invoice') } })
+}
+
+function trendHtml(pct, target) {
+  const up = pct >= 0
+  const tcls = target >= 0 ? 'pos' : 'neg'
+  return `<div class="trend ${up ? 'up' : 'down'}">
+    <span class="tpct"><i class="fa-solid fa-arrow-${up ? 'up' : 'down'}"></i> ${Math.abs(pct)}%</span>
+    <span class="ttar">vs. target: <b class="${tcls}">${target >= 0 ? '+' : ''}${target}%</b></span>
+  </div>`
+}
+
+function statCard(icon, tone, val, lbl, pct, target, spark) {
+  const isNum = typeof val === 'number'
+  return `<article class="card stat-card tone-${tone} hover">
+    <div class="sc-top">
+      <div class="sc-ico"><i class="fa-solid ${icon}"></i></div>
+      <i class="fa-solid ${icon} sc-watermark"></i>
+    </div>
+    <div class="sc-lbl">${lbl}</div>
+    <div class="sc-val" ${isNum ? `data-count="${val}"` : ''}>${val}</div>
+    ${trendHtml(pct, target)}
+    ${spark ? `<div class="sc-spark"><canvas class="spark" height="40"></canvas></div>` : ''}
+  </article>`
+}
+
+function wideCard(icon, tone, val, lbl, pct, target, wm) {
+  const w = Math.min(100, Math.max(8, (val || 0) * 1.4 + 30))
+  return `<article class="card wide-card tone-${tone} hover">
+    <i class="fa-solid ${wm} wc-watermark"></i>
+    <div class="wc-ico"><i class="fa-solid ${icon}"></i></div>
+    <div class="wc-body">
+      <div class="wc-lbl">${lbl}</div>
+      <div class="wc-val" data-count="${val}">${val}</div>
+      ${trendHtml(pct, target)}
+      <div class="wc-track"><div class="wc-fill" style="width:${w}%"></div></div>
+    </div>
+  </article>`
+}
+
+function actRow(x) {
+  const map = {
+    invoice: { ic: 'fa-file-invoice', col: 'blue', badge: 'paid', word: 'Paid' },
+    certificate: { ic: 'fa-award', col: 'violet', badge: 'issued', word: 'Issued' },
+    report: { ic: 'fa-chart-pie', col: 'ember', badge: 'verified', word: 'Done' },
+  }
+  const m = map[x.type] || map.invoice
+  const badge = x.status || m.badge
+  const sub = x.client_name || x.title || ''
+  return `<div class="act-row" data-doc="${x.id}">
+    <div class="act-ico tone-${m.col}"><i class="fa-solid ${m.ic}"></i></div>
+    <div class="act-main"><b>${esc(x.number || x.title || 'Document')}</b><small>${esc(sub)}</small></div>
+    <div class="act-end"><span class="badge ${badge}">${esc(cap(badge))}</span><small class="act-time">${timeAgo(x.created_at)}</small></div>
+    <i class="fa-solid fa-chevron-right act-arrow"></i>
+  </div>`
+}
+function cap(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : s }
+function timeAgo(ts) {
+  if (!ts) return ''
+  const diff = Date.now() - new Date(ts.replace(' ', 'T') + 'Z').getTime()
+  const h = Math.floor(diff / 3600000), dys = Math.floor(h / 24)
+  if (dys > 0) return dys + 'd ago'
+  if (h > 0) return h + 'h ago'
+  const m = Math.floor(diff / 60000); return (m > 0 ? m + 'm' : 'just now') + (m > 0 ? ' ago' : '')
 }
 function animateCounters(root) {
-  root.querySelectorAll('.val[data-count]').forEach((node) => {
+  root.querySelectorAll('.val[data-count],.sc-val[data-count],.wc-val[data-count]').forEach((node) => {
     const target = parseFloat(node.dataset.count); if (!target) return
-    let cur = 0; const step = target / 30
-    const t = setInterval(() => { cur += step; if (cur >= target) { cur = target; clearInterval(t) } node.textContent = Math.round(cur).toLocaleString() }, 18)
+    let cur = 0; const step = target / 32
+    const t = setInterval(() => { cur += step; if (cur >= target) { cur = target; clearInterval(t) } node.textContent = Math.round(cur).toLocaleString() }, 16)
   })
 }
 function recentRow(x) {
@@ -527,23 +658,56 @@ function recentRow(x) {
 }
 function emptyBlock(t) { return `<div class="empty"><i class="fa-solid fa-inbox"></i><p>${t}</p></div>` }
 
-let revChart
-function drawRevChart(series) {
-  const ctx = $('#rev-chart'); if (!ctx || !window.Chart) return
-  const labels = series.map((s) => s.d?.slice(5) || '')
-  const data = series.map((s) => s.amt)
-  if (!data.length) { labels.push('—'); data.push(0) }
+/* Mini sparklines inside the 4 stat cards */
+function drawSparklines(series) {
+  if (!window.Chart) return
+  const tones = ['#22c55e', '#f59e0b', '#4d8dff', '#8b5cf6']
+  const base = (series && series.length ? series.map((s) => s.amt) : [4, 7, 5, 9, 6, 11, 8])
+  document.querySelectorAll('.sc-spark canvas.spark').forEach((cv, i) => {
+    const col = tones[i % tones.length]
+    // jitter the base series per-card so each looks distinct
+    const data = base.map((v, k) => Math.max(1, v * (0.6 + (i * 0.13) + Math.sin(k + i) * 0.18) + (i + 1) * 2))
+    const ctx = cv.getContext('2d')
+    const g = ctx.createLinearGradient(0, 0, 0, 40)
+    g.addColorStop(0, col + '66'); g.addColorStop(1, col + '00')
+    new Chart(cv, {
+      type: 'line',
+      data: { labels: data.map(() => ''), datasets: [{ data, fill: true, backgroundColor: g, borderColor: col, borderWidth: 2, tension: .45, pointRadius: 0 }] },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { enabled: false } }, scales: { x: { display: false }, y: { display: false } }, animation: { duration: 1100, easing: 'easeOutQuart' }, elements: { line: { capBezierPoints: true } } },
+    })
+  })
+}
+
+/* Dual-layer Sales area chart */
+let salesChart
+function drawSalesChart(series) {
+  const ctx = $('#sales-chart'); if (!ctx || !window.Chart) return
   const dark = State.theme === 'dark'
-  const g = ctx.getContext('2d').createLinearGradient(0, 0, 0, 150)
-  g.addColorStop(0, 'rgba(99,102,241,.5)'); g.addColorStop(1, 'rgba(99,102,241,0)')
-  if (revChart) revChart.destroy()
-  revChart = new Chart(ctx, {
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun']
+  // derive two layered datasets from real series if available, else pleasant demo curve
+  const amts = (series && series.length >= 3) ? series.map((s) => s.amt) : null
+  const service = amts ? months.map((_, i) => (amts[i % amts.length] || 0) * 1.0 + 60 + i * 12) : [70, 90, 130, 210, 160, 200]
+  const product = amts ? months.map((_, i) => (amts[i % amts.length] || 0) * 0.6 + 30 + i * 8) : [40, 60, 120, 150, 110, 170]
+  const gA = ctx.getContext('2d').createLinearGradient(0, 0, 0, 170)
+  gA.addColorStop(0, 'rgba(0,210,255,.42)'); gA.addColorStop(1, 'rgba(0,210,255,0)')
+  const gB = ctx.getContext('2d').createLinearGradient(0, 0, 0, 170)
+  gB.addColorStop(0, 'rgba(139,92,246,.45)'); gB.addColorStop(1, 'rgba(139,92,246,0)')
+  if (salesChart) salesChart.destroy()
+  salesChart = new Chart(ctx, {
     type: 'line',
-    data: { labels, datasets: [{ data, fill: true, backgroundColor: g, borderColor: '#6366f1', tension: .4, pointRadius: 3, pointBackgroundColor: '#8b5cf6', borderWidth: 2.5 }] },
+    data: { labels: months, datasets: [
+      { label: 'Service sales', data: service, fill: true, backgroundColor: gA, borderColor: '#00d2ff', borderWidth: 2.5, tension: .45, pointRadius: 0, pointHoverRadius: 5, pointBackgroundColor: '#00d2ff' },
+      { label: 'Product sales', data: product, fill: true, backgroundColor: gB, borderColor: '#8b5cf6', borderWidth: 2.5, tension: .45, pointRadius: 0, pointHoverRadius: 5, pointBackgroundColor: '#8b5cf6' },
+    ] },
     options: {
-      responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
-      animation: { duration: 900, easing: 'easeOutQuart' },
-      scales: { x: { grid: { display: false }, ticks: { color: dark ? '#9aa4c4' : '#5b6479' } }, y: { grid: { color: dark ? 'rgba(255,255,255,.05)' : 'rgba(0,0,0,.05)' }, ticks: { color: dark ? '#9aa4c4' : '#5b6479' } } },
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { mode: 'index', intersect: false } },
+      animation: { duration: 1100, easing: 'easeOutQuart' },
+      interaction: { mode: 'index', intersect: false },
+      scales: {
+        x: { grid: { display: false }, ticks: { color: dark ? '#9aa4c4' : '#9b9384', font: { size: 11 } } },
+        y: { beginAtZero: true, suggestedMax: 250, grid: { color: dark ? 'rgba(255,255,255,.06)' : 'rgba(120,100,70,.1)' }, ticks: { color: dark ? '#9aa4c4' : '#9b9384', stepSize: 50, font: { size: 10 } } },
+      },
     },
   })
 }

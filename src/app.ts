@@ -7,7 +7,7 @@ export function renderApp(): string {
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover, user-scalable=no" />
   <meta name="theme-color" content="#0b0f1a" />
   <meta name="description" content="Invoker — Enterprise Invoice, Report & Certificate management for hospitals and companies." />
-  <title>Invoker — Enterprise Document Suite</title>
+  <title>Invoker — Document Suite</title>
   <link rel="manifest" href="/manifest.webmanifest" />
   <link rel="apple-touch-icon" href="/icon-192.png" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
