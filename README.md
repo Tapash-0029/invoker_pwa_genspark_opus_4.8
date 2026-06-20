@@ -1,4 +1,6 @@
-# Invoker — Enterprise Document Suite (PWA)
+# Invoker — Document Suite (PWA)
+
+> **UI**: Arcane/mystical theme — ornate gold-engraved login frame on a navy starfield, Cinzel serif "INVOKER" wordmark, official fire/water gear emblem logo, and a rich analytics dashboard (ornate header, sparkline stat cards, sales area chart, collection-rate donut gauge, activity feed) in both **dark** and **warm-parchment light** modes, with full micro-animations.
 
 ## Project Overview
 - **Name**: Invoker
