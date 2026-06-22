@@ -17,12 +17,6 @@
       "database_id": "local-dev-placeholder"
     }
   ],
-  "kv_namespaces": [
-    {
-      "binding": "KV",
-      "id": "local-kv-placeholder"
-    }
-  ],
   "r2_buckets": [
     {
       "binding": "R2",

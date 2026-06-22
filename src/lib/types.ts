@@ -2,7 +2,6 @@ import type { JwtPayload } from './crypto'
 
 export type Bindings = {
   DB: D1Database
-  KV: KVNamespace
   R2: R2Bucket
   JWT_SECRET: string
   APP_NAME: string
